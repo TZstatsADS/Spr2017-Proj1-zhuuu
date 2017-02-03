@@ -29,7 +29,7 @@ library("beeswarm")
 library("scales")
 library("RANN")
 library("topicmodels")
-
+library(lattice)
 
 source("C:/Users/Simon/Documents/GitHub/Spr2017-Proj1-zhuuu/lib/plotstacked.R")
 source("C:/Users/Simon/Documents/GitHub/Spr2017-Proj1-zhuuu/lib/speechFuncs.R")
@@ -376,7 +376,7 @@ The following graph compares sentiment of three selected inauguration speeches b
 
 
 ```{r,echo = FALSE}
-library(lattice)
+
 column1<-rep(c("anger"," anticipation","disgust"," fear","joy",      "sadness","surprise","trust"), 4)
 column2 <- rep(c("Roosevelt", "Truman", "Obama" , "AVG"), each = 8)
 column3<-c(unname(emo.means.Roosevelt),unname(emo.means.Truman),unname(emo.means.Obama),unname(emo.means))

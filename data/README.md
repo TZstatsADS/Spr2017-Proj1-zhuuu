@@ -4,5 +4,7 @@
 
 Project 1
 
-The relationship between US GDP growth and inauguration speech.
+Please knit project1.RMD, otherwise shiny wouldn't work.
+
+thanks
 
