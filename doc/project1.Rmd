@@ -11,6 +11,7 @@ I figured out there were some speeches carried out when US GDP reached a very lo
 
 
 ```{r, message=FALSE, warning=FALSE,echo = FALSE}
+setwd("~/GitHub/Spr2017-Proj1-zhuuu")
 
 library(tm)
 library(wordcloud)
@@ -38,7 +39,7 @@ source("C:/Users/Simon/Documents/GitHub/Spr2017-Proj1-zhuuu/lib/speechFuncs.R")
 ```{r,echo = FALSE}
 #folder.path="../data/inaugurals/"
 
-folder.path="C:/Users/Simon/Documents/GitHub/Spr2017-Proj1-zhuuu/data/InauguralSpeeches/"
+folder.path="../data/InauguralSpeeches/"
 
 speeches=list.files(path = folder.path, pattern = "*.txt")
 prex.out=substr(speeches, 6, nchar(speeches)-4)
@@ -264,7 +265,7 @@ fluidPage(
 
 
 ```{r,echo = FALSE}
-sentence.list<-read.csv("C:/Users/Simon/Documents/GitHub/Spr2017-Proj1-zhuuu/data/sen.csv",header = T)
+sentence.list<-read.csv("../data/sen.csv",header = T)
 sentence.list<- sentence.list[,-1]
 ```
 
@@ -426,8 +427,8 @@ Lets compare the selected president's sentiment with other presidents.
 \newline\
 The cluster plot can be generated differently each time, so let's focus on the position of each president on the plot rather than the what group each president falls in.
 \newline\
-The first plot is cluster by the setiment of *anger*,*anticipation*,*disgust*,* fear*,*joy*,*sadness*,*surprise* and *trust* \newline\
-No pattern can be find here, but president Obama and Roosevelt are closer to each other compare to Turman.
+The first plot is cluster by the setiment of *anger*,*anticipation*,*disgust*,*fear*,*joy*,*sadness*,*surprise* and *trust* \newline\
+No pattern can be find here, but president Obama (ObamaSpeech2009) and Roosevelt (RooseveltSpeech1993) are closer to each other compare to Turman.
 
 
 \newline\
