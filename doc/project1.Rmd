@@ -463,9 +463,9 @@ fviz_cluster(km.res,
 
 \newline\
 
-This the plot cluster by the setiment of *positive* and *negative*.
+The following plot is clusted by the setiment of *positive* and *negative*.
 \newline\
-Again, no pattern can be find here, president Obama and Roosevelt are closer to each other compare to Turman.
+Again, no pattern can be find here, president Obama (ObamaSpeech2009) and Roosevelt (RooseveltSpeech1993) are closer to each other compare to Turman.
 
 
 ```{r, fig.height=4.8, fig.width=7.5,echo = FALSE}
