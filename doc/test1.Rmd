@@ -1,0 +1,275 @@
+---
+title: "R Notebook"
+output:
+  html_notebook: default
+  html_document: default
+---
+
+```{r, message=FALSE, warning=FALSE,echo = FALSE}
+
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+library(dplyr)
+library(tidytext)
+library("rvest")
+library("tibble")
+library("qdap")
+library("sentimentr")
+library("gplots")
+library("syuzhet")
+library("factoextra")
+library("beeswarm")
+library("scales")
+library("RANN")
+library("topicmodels")
+
+
+source("C:/Users/Simon/Desktop/Zhuhe/Spr2017-Proj1-zhuuu-master/lib/plotstacked.R")
+source("C:/Users/Simon/Desktop/Zhuhe/Spr2017-Proj1-zhuuu-master/lib/speechFuncs.R")
+```
+
+```{r, message=FALSE, warning=FALSE}
+### Inauguaral speeches
+main.page <- read_html(x = "http://www.presidency.ucsb.edu/inaugurals.php")
+# Get link URLs
+# f.speechlinks is a function for extracting links from the list of speeches. 
+inaug=f.speechlinks(main.page)
+head(inaug)
+as.Date(inaug[,1], format="%B %e, %Y")
+inaug=inaug[-nrow(inaug),] # remove the last line, irrelevant due to error.
+```
+
+```{r}
+inaug.list=read.csv("C:/Users/Simon/Desktop/Zhuhe/Tutorial2/data/inauglist.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+speech.list <- inaug.list
+speech.list$type=rep("inaug", nrow(inaug.list))
+speech.url=inaug
+speech.list=cbind(speech.list, speech.url)
+names(speech.list)[1] <- "President"
+```
+
+```{r}
+# Loop over each row in speech.list
+speech.list$fulltext=NA
+for(i in seq(nrow(speech.list))) {
+  text <- read_html(speech.list$urls[i]) %>% # load the page
+    html_nodes(".displaytext") %>% # isloate the text
+    html_text() # get the text
+  speech.list$fulltext[i]=text
+  # Create the file name
+  filename <- paste0("C:/Users/Simon/Desktop/Zhuhe/Tutorial2/data/fulltext/", 
+                     speech.list$type[i],
+                     speech.list$File[i], "-", 
+                     speech.list$Term[i], ".txt")
+  sink(file = filename) %>% # open file to write 
+  cat(text)  # write the file
+  sink() # close the file
+}
+```
+
+```{r, message=FALSE, warning=FALSE}
+sentence.list=NULL
+for(i in 1:nrow(speech.list)){
+  sentences=sent_detect(speech.list$fulltext[i],
+                        endmarks = c("?", ".", "!", "|",";"))
+  if(length(sentences)>0){
+    emotions=get_nrc_sentiment(sentences)
+    word.count=word_count(sentences)
+    # colnames(emotions)=paste0("emo.", colnames(emotions))
+    # in case the word counts are zeros?
+    emotions=diag(1/(word.count+0.01))%*%as.matrix(emotions)
+    sentence.list=rbind(sentence.list, 
+                        cbind(speech.list[i,-ncol(speech.list)],
+                              sentences=as.character(sentences), 
+                              word.count,
+                              emotions,
+                              sent.id=1:length(sentences)
+                              )
+    )
+  }
+}
+```
+
+```{r}
+sentence.list=
+  sentence.list%>%
+  filter(!is.na(word.count)) 
+
+```
+
+```{r}
+sel.comparison=c("DonaldJTrump","JohnMcCain", "GeorgeBush", "MittRomney", "GeorgeWBush",
+                 "RonaldReagan","AlbertGore,Jr", "HillaryClinton","JohnFKerry", 
+                 "WilliamJClinton","HarrySTruman", "BarackObama", "LyndonBJohnson",
+                 "GeraldRFord", "JimmyCarter", "DwightDEisenhower", "FranklinDRoosevelt",
+                 "HerbertHoover","JohnFKennedy","RichardNixon","WoodrowWilson", 
+                 "AbrahamLincoln", "TheodoreRoosevelt", "JamesGarfield", 
+                 "JohnQuincyAdams", "UlyssesSGrant", "ThomasJefferson",
+                 "GeorgeWashington", "WilliamHowardTaft", "AndrewJackson",
+                 "WilliamHenryHarrison", "JohnAdams")
+```
+
+```{r}
+sentence.list.sel=sentence.list%>%filter(type=="inaug", File%in%sel.comparison, Term==1)
+sentence.list.sel$File=factor(sentence.list.sel$File)
+
+sentence.list.sel$FileOrdered=reorder(sentence.list.sel$File, 
+                                  sentence.list.sel$word.count, 
+                                  mean, 
+                                  order=T)
+par(mar=c(4, 11, 2, 2))
+
+beeswarm(word.count~FileOrdered, 
+         data=sentence.list.sel,
+         horizontal = TRUE,
+         pch=16, col=alpha(brewer.pal(9, "Set1"), 0.6), 
+         cex=0.55, cex.axis=0.8, cex.lab=0.8,
+         spacing=5/nlevels(sentence.list.sel$FileOrdered),
+         las=2, ylab="", xlab="Number of words in a sentence.",
+         main="Inaugural Speeches")
+```
+
+```{r}
+sentence.list%>%
+  filter(File=="DonaldJTrump", 
+         type=="inaug", 
+         word.count<=3)%>%
+  select(sentences)%>%sample_n(5)
+
+sentence.list%>%
+  filter(File=="BarackObama",
+         type=="inaug",
+         word.count<=3)%>%
+  select(sentences)%>%sample_n(4)
+
+sentence.list%>%
+  filter(File=="Clinton", 
+         type=="inaug", 
+         word.count<=3)%>%
+  select(sentences)
+
+sentence.list%>%
+  filter(File=="WilliamJClinton", 
+         type=="inaug", Term==1,
+         word.count<=3)%>%
+  select(sentences)
+```
+
+```{r}
+par(mfrow=c(4,1), mar=c(1,0,2,0), bty="n", xaxt="n", yaxt="n", font.main=1)
+
+f.plotsent.len(In.list=sentence.list, InFile="FranklinDRoosevelt", 
+               InType="inaug", InTerm=1, President="Franklin D Roosevelt")
+
+f.plotsent.len(In.list=sentence.list, InFile="HarrySTruman", 
+               InType="inaug", InTerm=1, President="Harry S Truman")
+
+f.plotsent.len(In.list=sentence.list, InFile="BarackObama", 
+               InType="inaug", InTerm=1, President="BarackObama")
+```
+
+```{r}
+print("Franklin D Roosevelt")
+speech.df=tbl_df(sentence.list)%>%
+  filter(File=="FranklinDRoosevelt", type=="inaug", Term==1, word.count>=4)%>%
+  select(sentences, anger:trust)
+speech.df=as.data.frame(speech.df)
+as.character(speech.df$sentences[apply(speech.df[,-1], 2, which.max)])
+
+print("HarrySTruman")
+speech.df=tbl_df(sentence.list)%>%
+  filter(File=="HarrySTruman", type=="inaug", Term==1, word.count>=5)%>%
+  select(sentences, anger:trust)
+speech.df=as.data.frame(speech.df)
+as.character(speech.df$sentences[apply(speech.df[,-1], 2, which.max)])
+
+print("Barack Obama")
+speech.df=tbl_df(sentence.list)%>%
+  filter(File=="BarackObama", type=="inaug", Term==1, word.count>=5)%>%
+  select(sentences, anger:trust)
+speech.df=as.data.frame(speech.df)
+as.character(speech.df$sentences[apply(speech.df[,-1], 2, which.max)])
+
+```
+
+```{r}
+FranklinDRoosevelt.sentence.list<-sentence.list[sentence.list[,1] == "Franklin D. Roosevelt" & sentence.list[,3] == 1,]
+
+HarrySTruman.sentence.list<-sentence.list[sentence.list[,1] == "Harry S. Truman",]
+
+JohnFKennedy.sentence.list<-sentence.list[sentence.list[,1] == "John F. Kennedy" & sentence.list[,3] == 1,]
+
+BarackObama.sentence.list<-sentence.list[sentence.list[,1] == "Barack Obama" & sentence.list[,3] == 1,]
+
+par(mar=c(4, 6, 2, 1))
+emo.means.Roosevelt=colMeans(select(FranklinDRoosevelt.sentence.list, anger:trust)>0.01)
+col.use=c("red2", "darkgoldenrod1", 
+            "chartreuse3", "blueviolet",
+            "darkgoldenrod2", "dodgerblue3", 
+            "darkgoldenrod1", "darkgoldenrod1")
+barplot(emo.means.Roosevelt, las=2, col=col.use, horiz=F, main="Franklin D. Roosevelt Inaugural Speeches")
+
+par(mar=c(4, 6, 2, 1))
+emo.means.Truman=colMeans(select(HarrySTruman.sentence.list, anger:trust)>0.01)
+col.use=c("red2", "darkgoldenrod1", 
+            "chartreuse3", "blueviolet",
+            "darkgoldenrod2", "dodgerblue3", 
+            "darkgoldenrod1", "darkgoldenrod1")
+barplot(emo.means.Truman, las=2, col=col.use, horiz=F, main="Harry S. Truman Inaugural Speeches")
+
+emo.means.Kennedy=colMeans(select(JohnFKennedy.sentence.list, anger:trust)>0.01)
+
+par(mar=c(4, 6, 2, 1))
+emo.means.Obama=colMeans(select(BarackObama.sentence.list, anger:trust)>0.01)
+col.use=c("red2", "darkgoldenrod1", 
+            "chartreuse3", "blueviolet",
+            "darkgoldenrod2", "dodgerblue3", 
+            "darkgoldenrod1", "darkgoldenrod1")
+barplot(emo.means.Obama, las=2, col=col.use, horiz=F, main="Barack Obama Inaugural Speeches")
+
+par(mar=c(4, 6, 2, 1))
+emo.means=colMeans(select(sentence.list, anger:trust)>0.01)
+col.use=c("red2", "darkgoldenrod1", 
+            "chartreuse3", "blueviolet",
+            "darkgoldenrod2", "dodgerblue3", 
+            "darkgoldenrod1", "darkgoldenrod1")
+barplot(emo.means, las=2, col=col.use, horiz=F, main="All Inaugural Speeches")
+
+
+emo.means2.Roosevelt=colMeans(select(FranklinDRoosevelt.sentence.list, negative:positive)>0.01)
+emo.means2.Truman=colMeans(select(HarrySTruman.sentence.list, negative:positive)>0.01)
+emo.means2.Kennedy=colMeans(select(JohnFKennedy.sentence.list, negative:positive)>0.01)
+emo.means2.Obama=colMeans(select(BarackObama.sentence.list, negative:positive)>0.01)
+emo.means2=colMeans(select(sentence.list, negative:positive)>0.01)
+```
+
+```{r}
+par(mar=c(4, 6, 2, 1))
+emo.means=colMeans(select(sentence.list, negative:positive)>0.01)
+col.use=c("red2", "darkgoldenrod1")
+barplot(emo.means, las=2, col=col.use, horiz=F, main="All Inaugural Speeches")
+```
+
+```{r}
+library(lattice)
+column1<-rep(c("anger"," anticipation","disgust"," fear","joy",      "sadness","surprise","trust"), 4)
+column2 <- rep(c("Roosevelt", "Truman", "Obama" , "All"), each = 8)
+column3<-c(unname(emo.means.Roosevelt),unname(emo.means.Truman),unname(emo.means.Obama),unname(emo.means))
+
+emo.df<- data.frame(column1=column1, column2=column2, rate=column3)
+
+barchart(rate ~ column1, groups=column2, emo.df, auto.key = list(columns = 3))
+```
+
+```{r}
+col1<-rep(c("negative","positive"), 4)
+col2 <- rep(c("Roosevelt", "Truman", "Obama" , "All"), each = 2)
+col3<-c(unname(emo.means2.Roosevelt),unname(emo.means2.Truman),unname(emo.means2.Obama),unname(emo.means2))
+emo.df2<- data.frame(column1=col1, column2=col2, rate=col3)
+barchart(rate ~ column1, groups=column2, emo.df2, auto.key = list(columns = 3))
+```
+

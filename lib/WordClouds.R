@@ -4,7 +4,8 @@ library(RColorBrewer)
 library(dplyr)
 library(tidytext)
 
-folder.path="../data/InauguralSpeeches/"
+#folder.path="../data/InauguralSpeeches/"
+folder.path="C:/Users/Simon/Desktop/Zhuhe/Spr2017-Proj1-zhuuu-master/data/InauguralSpeeches/"
 speeches=list.files(path = folder.path, pattern = "*.txt")
 prez.out=substr(speeches, 6, nchar(speeches)-4)
 
@@ -47,7 +48,7 @@ for(i in 1:length(speeches)){
 #  v <- sort(rowSums(m),decreasing=TRUE)
 #  d <- data.frame(word = names(v),freq=v)
   
-  png(paste("../output/", prez.out[i], ".png", sep=""),
+  png(paste("C:/Users/Simon/Desktop/Zhuhe/Spr2017-Proj1-zhuuu-master/output/", prez.out[i], ".png", sep=""),
       width=300, height=300)
   wordcloud(ff.dtm$term[ff.dtm$document==speeches[i]],
             ff.dtm$count[ff.dtm$document==speeches[i]],
@@ -62,4 +63,5 @@ for(i in 1:length(speeches)){
             main=prez.out[i])
   dev.off()
   
-  }
+}
+
