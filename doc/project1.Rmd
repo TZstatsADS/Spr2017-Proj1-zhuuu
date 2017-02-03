@@ -1,5 +1,5 @@
 ---
-title: "Project 1"
+title: "Project 1 - R Notebook Data Story on US presidents' inaugural speeches"
 runtime: shiny
 output:
   html_document: default
@@ -410,7 +410,7 @@ sentence.list1<-rbind(sentence.list,FranklinDRoosevelt.sentence.list)
 
 
 BarackObama.sentence.list[,2]<-"ObamaSpeech2009"
-sentence.list1<-rbind(sentence.list,BarackObama.sentence.list)
+sentence.list1<-rbind(sentence.list1,BarackObama.sentence.list)
 ```
 
 \newline\
@@ -429,6 +429,9 @@ The cluster plot can be generated differently each time, so let's focus on the p
 The first plot is cluster by the setiment of *anger*,*anticipation*,*disgust*,* fear*,*joy*,*sadness*,*surprise* and *trust* \newline\
 No pattern can be find here, but president Obama and Roosevelt are closer to each other compare to Turman.
 
+
+\newline\
+*Note: **ObamaSpeech2009** is Obama's inaugural speech in 2009. **RooseveltSpeech1993** stand for  Obama's inaugural speech in 1933. Truman only gave one inaugral speech on 1949.*
 ```{r, fig.height=4.8, fig.width=7.5,echo = FALSE}
 presid.summary=tbl_df(sentence.list1)%>%
   filter(type=="inaug", File%in%sel.comparison3)%>%
@@ -450,7 +453,7 @@ presid.summary=tbl_df(sentence.list1)%>%
 presid.summary=as.data.frame(presid.summary)
 rownames(presid.summary)=as.character((presid.summary[,1]))
 km.res=kmeans(presid.summary[,-1], iter.max=300,
-              3)
+              5)
 fviz_cluster(km.res, 
              stand=F, repel= TRUE,
              data = presid.summary[,-1], xlab="", xaxt="n",
@@ -485,7 +488,7 @@ presid.summary=tbl_df(sentence.list1)%>%
 presid.summary=as.data.frame(presid.summary)
 rownames(presid.summary)=as.character((presid.summary[,1]))
 km.res=kmeans(presid.summary[,-1], iter.max=300,
-              3)
+              4)
 fviz_cluster(km.res, 
              stand=F, repel= TRUE,
              data = presid.summary[,-1], xlab="", xaxt="n",
