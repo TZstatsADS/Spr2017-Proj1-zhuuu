@@ -454,7 +454,7 @@ presid.summary=tbl_df(sentence.list1)%>%
 presid.summary=as.data.frame(presid.summary)
 rownames(presid.summary)=as.character((presid.summary[,1]))
 km.res=kmeans(presid.summary[,-1], iter.max=300,
-              5)
+              4)
 fviz_cluster(km.res, 
              stand=F, repel= TRUE,
              data = presid.summary[,-1], xlab="", xaxt="n",
